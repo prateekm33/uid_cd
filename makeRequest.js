@@ -1,7 +1,31 @@
 const request = require('request');
 const baseUri = 'https://www.random.org/integers/';
 
-function makeRequest(options) {
+function makeRequest({ size, max, col }) {
+  let numsToRequest = size * 3;
+  const numRequestToMake = Math.floor(numsToRequest / 10000) + 1;
+
+  const promises = [];
+  while (numsToRequest) {
+    let requesting = numsToRequest < 10000 ? numsToRequest : 10000;
+    numsToRequest -= requesting;
+    let options = {
+      num : requesting,
+      min : 0,
+      max,
+      col,
+      base : 10,
+      format : 'plain',
+      rnd : 'new'
+    }
+    promises.push(requestHelper(options));
+  }
+
+  return Promise.all(promises, result => result);
+}
+
+
+function requestHelper(options) {
   const qps = parseOptionsToQPs(options);
   return new Promise((resolve, reject) => {
     request.get(`${baseUri}?${qps}`, (e, r, b) => {
